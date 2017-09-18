@@ -56,15 +56,20 @@ class Gitlab
       repo = repos_list["projects"][get]["#{repo_location}"]
       dir = repos_list["projects"][get]["name"]
       repo_dir = "#{repos_dir}/#{dir}"
-
-      if File.directory?("#{repo_dir}")
-        puts Rainbow("\t\"#{repo_name}\" repo directory exists, doing a git pull instead.").purple
-        Dir.chdir("#{repo_dir}")
-        g = Git.init
-        g.pull
-      else
-        puts Rainbow("\tCloning repo \"#{repo_name}\"...").blue
-        Git.clone("#{repo}", "#{repo_dir}")
+      begin
+        if File.directory?("#{repo_dir}")
+          puts Rainbow("\t\"#{repo_name}\" repo directory exists, doing a git pull instead.").purple
+          Dir.chdir("#{repo_dir}")
+          g = Git.init
+          g.pull
+        else
+          puts Rainbow("\tCloning repo \"#{repo_name}\"...").blue
+          Git.clone("#{repo}", "#{repo_dir}")
+        end
+      rescue Git::GitExecuteError => e
+        puts Rainbow("\tFailed cloning repo \"#{repo_name}\"...").red
+        puts Rainbow(e.message).red
+        puts Rainbow(e.backtrace.inspect).red
       end
     end
     puts Rainbow("\n-------------------------------------------------------------------\n").green
